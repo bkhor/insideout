@@ -1,0 +1,25 @@
+[project]
+name = "insideout"
+version = "0.1.0"
+description = "Audio stem separator with BPM and key detection"
+readme = "README.md"
+requires-python = ">=3.11,<3.12"
+dependencies = [
+    "torch==2.2.2",
+    "torchaudio==2.2.2",
+    "demucs>=4.0.1",
+    "librosa>=0.11.0",
+    "essentia>=2.1b6.dev1389",
+    "soundfile>=0.13.1",
+    "pydub>=0.25.1",
+    "numpy<2",
+    "numba>=0.62.1",
+    "llvmlite>=0.45.1,<0.46",
+]
+
+[tool.uv]
+# llvmlite 0.46+ has no macOS x86_64 wheel and fails to build from source.
+# numba/llvmlite and essentia must be installed via pip with --only-binary.
+# Run: .venv/bin/pip install llvmlite --only-binary :all:
+#      .venv/bin/pip install numba --only-binary :all:
+#      .venv/bin/pip install librosa essentia pydub

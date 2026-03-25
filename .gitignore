@@ -1,0 +1,26 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Output
+output/
+
+# OS
+.DS_Store
+
+# Audio files (don't accidentally commit large media)
+*.mp3
+*.wav
+*.flac
+*.aiff
+*.aif
+*.ogg
+*.m4a
+*.wma
