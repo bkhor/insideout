@@ -15,6 +15,9 @@ import zipfile
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
+import numpy as np
+import soundfile as sf
+
 from analysis import detect_bpm, detect_key, load_audio
 from separation import separate_stems
 from trimmer import TrimConfig, parse_trim_stems, should_apply, trim_stem
@@ -30,6 +33,12 @@ def process(audio_path: str, output_dir: str, model: str, make_zip: bool, trim_c
     stem_name = Path(audio_path).stem
     suffix = Path(audio_path).suffix
     tag = f"[{name}]"
+
+    # --- Skip if already processed ---
+    existing = list(Path(output_dir).glob(f"{stem_name}_*"))
+    if existing:
+        tprint(f"{tag} Already processed (found {existing[0].name}) — skipping")
+        return
 
     # --- Step 1: BPM from full mix ---
     tprint(f"{tag} Detecting BPM...")
@@ -67,7 +76,18 @@ def process(audio_path: str, output_dir: str, model: str, make_zip: bool, trim_c
         final_dir = Path(output_dir) / out_name
         final_dir.mkdir(parents=True, exist_ok=True)
 
-        shutil.copy2(audio_path, final_dir / f"{out_name}{suffix}")
+        # --- Build instrumental (all stems except vocals) ---
+        instrumental_stems = [f for f in stem_files if "vocals" not in f.stem.lower()]
+        if instrumental_stems:
+            arrays, rate = [], None
+            for stem_file in instrumental_stems:
+                data, rate = sf.read(str(stem_file))
+                arrays.append(data)
+            instrumental = np.clip(sum(arrays), -1.0, 1.0)
+            instrumental_dest = final_dir / f"{out_name}_instrumental.wav"
+            sf.write(str(instrumental_dest), instrumental, rate)
+            tprint(f"{tag} Instrumental written ({len(instrumental_stems)} stems mixed)")
+
         for stem_file in stem_files:
             dest = final_dir / f"{out_name}_{stem_file.stem}{stem_file.suffix}"
             shutil.copy2(stem_file, dest)
@@ -112,6 +132,11 @@ def main():
         "--no-zip",
         action="store_true",
         help="Output a folder instead of a zip file",
+    )
+    parser.add_argument(
+        "--recursive", "-r",
+        action="store_true",
+        help="Recursively scan subdirectories for audio files.",
     )
     parser.add_argument(
         "--workers", "-w",
@@ -176,7 +201,7 @@ def main():
             gap_ms=args.trim_t,
         )
 
-    files = collect_files(args.input)
+    files = collect_files(args.input, recursive=args.recursive)
     total = len(files)
     workers = min(args.workers, total)
 
