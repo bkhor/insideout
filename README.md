@@ -62,7 +62,7 @@ Supported formats: `.wav` `.mp3` `.flac` `.aiff` `.aif` `.ogg` `.m4a` `.wma`
 
 | Flag | Short | Default | Description |
 |------|-------|---------|-------------|
-| `--output` | `-o` | `./output` | Output directory |
+| `--output` | `-o` | `./stems` | Output directory |
 | `--model` | `-m` | `htdemucs` | Demucs model (see below) |
 | `--format` | `-f` | `wav` | Output format for stems: `mp3`, `wav`, `flac` |
 | `--no-zip` | | off | Output a folder instead of a zip file |
