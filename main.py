@@ -244,7 +244,7 @@ def main():
             gap_ms=args.trim_t,
         )
 
-    files = collect_files(args.input, recursive=args.recursive)
+    files = collect_files(args.input, recursive=args.recursive, exclude_dir=args.output)
     total = len(files)
     workers = min(args.workers, total)
 

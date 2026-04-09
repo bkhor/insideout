@@ -17,13 +17,19 @@ def build_label(bpm: float, key: str, scale: str) -> str:
     return f"{key}{scale_short}_{int(bpm)}bpm"
 
 
-def collect_files(input_path: str, recursive: bool = False) -> list[Path]:
+def collect_files(input_path: str, recursive: bool = False, exclude_dir: str | None = None) -> list[Path]:
     p = Path(input_path)
+    exclude = Path(exclude_dir).resolve() if exclude_dir else None
     if p.is_file():
         return [p]
     if p.is_dir():
         iterator = p.rglob("*") if recursive else p.iterdir()
-        files = sorted(f for f in iterator if f.is_file() and f.suffix.lower() in AUDIO_EXTENSIONS)
+        files = sorted(
+            f for f in iterator
+            if f.is_file()
+            and f.suffix.lower() in AUDIO_EXTENSIONS
+            and (exclude is None or not f.resolve().is_relative_to(exclude))
+        )
         if not files:
             raise FileNotFoundError(f"No audio files found in '{p}'")
         return files
