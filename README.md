@@ -64,8 +64,10 @@ Supported formats: `.wav` `.mp3` `.flac` `.aiff` `.aif` `.ogg` `.m4a` `.wma`
 |------|-------|---------|-------------|
 | `--output` | `-o` | `./output` | Output directory |
 | `--model` | `-m` | `htdemucs` | Demucs model (see below) |
+| `--format` | `-f` | `wav` | Output format for stems: `mp3`, `wav`, `flac` |
 | `--no-zip` | | off | Output a folder instead of a zip file |
 | `--workers` | `-w` | `1` | Parallel workers for batch processing |
+| `--recursive` | `-r` | off | Also process files in subdirectories |
 
 ## Models
 
@@ -88,10 +90,6 @@ When `--trim` is enabled, any stem exceeding the silence threshold gets a `_trim
 | `--trim-m` | `-40` | Silence threshold in dBFS |
 | `--trim-s` | `1000` | Minimum silence duration in ms to be cut |
 | `--trim-t` | `1500` | Gap in ms inserted between kept chunks |
-
-## Recursive Flag
-
-When `--recursive` is enabled, the input directory's files will be processed along with the files in any of the descendant subdirectories of the input directory.
 
 ## Examples
 
@@ -116,6 +114,12 @@ python main.py track.mp3 --trim --trim-stems vocals,other
 
 # Trim all stems with custom settings
 python main.py track.mp3 --trim --trim-stems all --trim-m -50 --trim-s 500 --trim-t 2000
+
+# Output stems as MP3
+python main.py track.mp3 --format mp3
+
+# Recursively process a folder and all subfolders
+python main.py ~/Music/ --recursive --workers 2
 ```
 
 ## Output
@@ -124,7 +128,7 @@ For a file `track.mp3` detected as A minor at 128 BPM:
 
 ```
 track_Amin_128bpm.zip
-├── track_Amin_128bpm_instrumental.mp3              
+├── track_Amin_128bpm_instrumental.wav
 ├── track_Amin_128bpm_vocals.wav
 ├── track_Amin_128bpm_drums.wav
 ├── track_Amin_128bpm_bass.wav
@@ -133,5 +137,7 @@ track_Amin_128bpm.zip
 # with --trim:
 └── track_Amin_128bpm_vocals_trimmed.wav   silence removed, chunks joined with gap
 ```
+
+Use `--format mp3` or `--format flac` to output stems in a different format. The default is `wav`.
 
 Before processing a track, the program checks the output folder. If it finds that stems have already been generated for a certain file, the file will be skipped. This way, you can periodically run insideout on a folder that you've been adding files to without needing it to rerun for every single file.
