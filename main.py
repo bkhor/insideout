@@ -156,7 +156,7 @@ def main():
     parser.add_argument("input", help="Input audio file or folder of audio files")
     parser.add_argument(
         "--output", "-o",
-        default="./output",
+        default="./stems",
         help="Output directory (default: ./output)",
     )
     parser.add_argument(
