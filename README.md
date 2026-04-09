@@ -68,6 +68,7 @@ Supported formats: `.wav` `.mp3` `.flac` `.aiff` `.aif` `.ogg` `.m4a` `.wma`
 | `--no-zip` | | off | Output a folder instead of a zip file |
 | `--workers` | `-w` | `1` | Parallel workers for batch processing |
 | `--recursive` | `-r` | off | Also process files in subdirectories |
+| `--log` | `-l` | off | Write a timestamped log file to the output directory |
 
 ## Models
 

@@ -22,14 +22,14 @@ from pydub import AudioSegment
 from analysis import detect_bpm, detect_key, load_audio
 from separation import separate_stems
 from trimmer import TrimConfig, parse_trim_stems, should_apply, trim_stem
-from utils import AUDIO_EXTENSIONS, build_label, collect_files, tprint
+from utils import AUDIO_EXTENSIONS, build_label, collect_files, set_log_file, tprint
 
 FORMATS = ("mp3", "wav", "flac")
 
 
 def write_audio(src: Path, dest_no_ext: Path, fmt: str) -> Path:
     """Copy/convert a WAV stem file to the target format. Returns the written path."""
-    dest = dest_no_ext.with_suffix(f".{fmt}")
+    dest = Path(str(dest_no_ext) + f".{fmt}")
     if fmt == "wav":
         shutil.copy2(src, dest)
     elif fmt == "flac":
@@ -43,7 +43,7 @@ def write_audio(src: Path, dest_no_ext: Path, fmt: str) -> Path:
 
 def write_array(data: np.ndarray, rate: int, dest_no_ext: Path, fmt: str) -> Path:
     """Write a numpy audio array to the target format. Returns the written path."""
-    dest = dest_no_ext.with_suffix(f".{fmt}")
+    dest = Path(str(dest_no_ext) + f".{fmt}")
     if fmt == "mp3":
         # soundfile can't write MP3; write a temp WAV then convert
         with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
@@ -182,6 +182,11 @@ def main():
         help="Recursively scan subdirectories for audio files.",
     )
     parser.add_argument(
+        "--log", "-l",
+        action="store_true",
+        help="Write a log of all output to insideout.log in the output directory.",
+    )
+    parser.add_argument(
         "--workers", "-w",
         type=int,
         default=1,
@@ -244,20 +249,26 @@ def main():
             gap_ms=args.trim_t,
         )
 
+    if args.log:
+        from datetime import datetime
+        Path(args.output).mkdir(parents=True, exist_ok=True)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        set_log_file(str(Path(args.output) / f"insideout_{timestamp}.log"))
+
     files = collect_files(args.input, recursive=args.recursive, exclude_dir=args.output)
     total = len(files)
     workers = min(args.workers, total)
 
-    print(f"Found {total} file(s). Processing with {workers} worker(s).")
+    tprint(f"Found {total} file(s). Processing with {workers} worker(s).")
 
     failed = 0
     if workers == 1:
         for i, audio_file in enumerate(files, 1):
-            print(f"\n--- [{i}/{total}] {audio_file.name} ---")
+            tprint(f"\n--- [{i}/{total}] {audio_file.name} ---")
             try:
                 process(str(audio_file), args.output, args.model, not args.no_zip, args.format, trim_config)
             except Exception as e:
-                print(f"ERROR: {e} — skipping")
+                tprint(f"ERROR: {e} — skipping")
                 failed += 1
     else:
         futures = {}
@@ -277,7 +288,7 @@ def main():
     status = f"{total - failed}/{total} succeeded"
     if failed:
         status += f", {failed} failed"
-    print(f"\nAll done. {status} -> {args.output}/")
+    tprint(f"\nAll done. {status} -> {args.output}/")
 
 
 if __name__ == "__main__":

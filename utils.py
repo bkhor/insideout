@@ -2,14 +2,26 @@ from pathlib import Path
 from threading import Lock
 
 _print_lock = Lock()
+_log_file = None
 
 AUDIO_EXTENSIONS = {".wav", ".mp3", ".flac", ".aiff", ".aif", ".ogg", ".m4a", ".wma"}
 
 
+def set_log_file(path: str):
+    global _log_file
+    _log_file = open(path, "w", buffering=1)
+
+
+def get_log_file():
+    return _log_file
+
+
 def tprint(*args, **kwargs):
-    """Thread-safe print."""
+    """Thread-safe print, also writes to log file if enabled."""
     with _print_lock:
         print(*args, **kwargs)
+        if _log_file:
+            print(*args, **kwargs, file=_log_file)
 
 
 def build_label(bpm: float, key: str, scale: str) -> str:
